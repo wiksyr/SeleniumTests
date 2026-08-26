@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
+using SeleniumTests.Pages.Impl;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
@@ -11,40 +12,36 @@ public class AmazonTests
     private static IWebDriver? _driver;
     private static WebDriverWait _wait;
 
+    private const int ImplicitWaitTimeoutInSeconds = 10;
+    private const int ExplicitWaitTimeoutInSeconds = 5;
+
     [SetUp]
     public void Setup()
     {
         new DriverManager().SetUpDriver(new ChromeConfig());
         _driver = new ChromeDriver(); 
-        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
-        _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(ImplicitWaitTimeoutInSeconds);
+        _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(ExplicitWaitTimeoutInSeconds));
     }
 
     [Test]
     public void CheckSearchItems()
     {
-        var searchItem = "macbook"; 
-        _driver?.Navigate().GoToUrl("https://www.amazon.com");
+        var searchItem = "laptop";
 
-        _driver?.Manage().Window.Maximize();
-        _driver?.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0);
-        var searchBox = _wait.Until(driver => driver.FindElement(By.CssSelector("#twotabsearchtextbox[name='field-keywords']")));
-        _driver?.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+        var homePage = new HomePage(_driver!, _wait);
+        homePage.NavigateToHomePage(); 
+        homePage.SearchForItem(searchItem);
+        var searchResultsPage = new SearchResultsPage(_driver!, _wait);
+        var searchResults = searchResultsPage.GetResults();
 
-        searchBox.SendKeys("laptop");
-        searchBox.SendKeys(Keys.Enter);
-
-        _driver?.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0);
-        var results = _wait.Until(driver => driver.FindElements(By.CssSelector("div[role='listitem']")));
-        _driver?.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
-
-        var resultItems = results.Select(r => r.Text).ToList();
-        Assert.That(resultItems.Contains(searchItem), Is.True);
+        Assert.That(searchResults.Any(r => r.Contains(searchItem)), Is.True);
     }
 
     [TearDown]
     public void TearDown()
     {
+        _driver?.Quit();
         _driver?.Dispose();
     }
 }
