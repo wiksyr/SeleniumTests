@@ -31,11 +31,11 @@ public class AmazonTests
 
         var homePage = new HomePage(_driver!, _wait);
         homePage.NavigateToHomePage(); 
-        homePage.SearchForItem(searchItem);
+        homePage.SearchBox.SearchForItem(searchItem);
         var searchResultsPage = new SearchResultsPage(_driver!, _wait);
-        var searchResults = searchResultsPage.GetResults();
+        var searchResults = searchResultsPage.ResultItems;
 
-        Assert.That(searchResults.Any(r => r.Contains(searchItem)), Is.True);
+        Assert.That(searchResults.Any(r => r.Text.Contains(searchItem)), Is.True);
     }
 
     [TearDown]
